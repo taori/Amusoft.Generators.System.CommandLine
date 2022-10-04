@@ -1,0 +1,144 @@
+name: CI
+
+on: 
+  push:
+    branches: [ main ]
+    paths:
+      - .github/workflows/*
+      - src/**/*
+      - tests/**/*
+
+  pull_request:
+    branches: [ main ]
+    types: 
+      - opened
+      - reopened
+      - synchronize 
+
+  workflow_dispatch:
+    inputs:          
+      versionSuffix:
+        required: false
+        type: string
+        description: Version suffix for package
+        default: ""
+        
+      publish:
+        description: Whether or not to publish on nuget
+        required: true
+        type: boolean
+        default: true
+
+      publishSymbols:
+        description: Whether or not to publish snupkg
+        required: true
+        type: boolean
+        default: true
+
+      removePrereleases:
+        description: Whether or not to remove prior prereleases
+        required: true
+        type: boolean
+        default: true
+                
+      configuration:
+        description: Configuration of build artifact
+        required: false
+        default: Release
+        type: choice
+        options:
+        - Debug
+        - Release
+
+      verbosity:
+        description: Verbosity of build process
+        required: false
+        default: minimal
+        type: choice
+        options:
+        - quiet
+        - minimal
+        - normal
+        - detailed
+        - diagnostic
+
+jobs:
+
+  parameters:
+    runs-on: ubuntu-latest
+  
+    outputs:      
+      versionSuffix : ${{ steps.parameters.outputs.versionSuffix }}
+      configuration : ${{ steps.parameters.outputs.configuration }}
+      verbosity : ${{ steps.parameters.outputs.verbosity }}
+      publish : ${{ steps.parameters.outputs.publish }}
+      publishSymbols : ${{ steps.parameters.outputs.publishSymbols }}
+      removePrereleases : ${{ steps.parameters.outputs.removePrereleases }}
+
+    steps:
+
+    - name: nuget secret verification
+      env:
+        NUGET: ${{ secrets.NUGET }}
+      if: "${{ env.NUGET == '' }}"
+      uses: actions/github-script@v3
+      with:
+        script: |
+            core.setFailed('"nuget" secret is missing')
+
+    - name: Setting up parameters
+      id: parameters
+      shell: pwsh
+      run: |
+        Write-Host "Setting up parameters"
+
+        $suffixMap = @{
+            "push"="alpha.${{github.run_number}}"; 
+            "pull_request"="beta.${{github.run_number}}"; 
+            "workflow_dispatch"="${{github.event.inputs.versionSuffix}}"
+        };
+        $suffix = $suffixMap['${{github.event_name}}']
+        if( $suffixMap['workflow_dispatch'] -ne '' -and '${{github.event_name}}' -eq 'workflow_dispatch'){
+            $suffix = $($suffix.TrimEnd('.') + ".")
+            $suffix = "$($suffix)${{github.run_number}}"
+        }  
+
+        #   key name                workflow value                                  fallback value
+        $values = @(
+            @("versionSuffix",      "$suffix",                                      "$suffix"),
+            @("configuration",      "${{github.event.inputs.configuration}}",       "Release"),
+            @("verbosity",          "${{github.event.inputs.verbosity}}",           "minimal"),
+            @("publish",            "${{github.event.inputs.publish}}",             "true"),
+            @("publishSymbols",     "${{github.event.inputs.publishSymbols}}",      "true"),
+            @("removePrereleases",  "${{github.event.inputs.removePrereleases}}",   "true")
+        )
+            
+        $manual = $('${{github.event_name}}' -eq 'workflow_dispatch')
+
+        foreach($pair in $values){
+            $value = $pair[2]
+            if($manual -eq $true){
+                $value = $pair[1]
+            }
+            
+            Write-Host "Setting parameter $($pair[0]) => $value"
+            echo "::set-output name=$($pair[0])::$value"
+        }    
+
+  package:
+    needs: parameters
+    uses: taori/actions/.github/workflows/nupkg.yml@v2
+    with:
+      solutionPath: src/All.sln
+      projectPath: src/Amusoft.Generators.System.CommandLine/Amusoft.Generators.System.CommandLine.csproj
+      versionSuffix: ${{ needs.parameters.outputs.versionSuffix }}
+      publish: ${{ needs.parameters.outputs.publish == 'true' }}
+      publishSymbols: ${{ needs.parameters.outputs.publishSymbols == 'true' }}
+      removePrereleases: ${{ needs.parameters.outputs.removePrereleases == 'true' }}
+      packageId: Amusoft.Generators.System.CommandLine
+      configuration: ${{ needs.parameters.outputs.configuration }}
+      verbosity: ${{ needs.parameters.outputs.verbosity }}
+      dotnetVersion: 6.0.x
+    secrets:
+      nuget: ${{ secrets.NUGET }}
+      
