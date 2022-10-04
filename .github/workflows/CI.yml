@@ -108,9 +108,9 @@ jobs:
             @("versionSuffix",      "$suffix",                                      "$suffix"),
             @("configuration",      "${{github.event.inputs.configuration}}",       "Release"),
             @("verbosity",          "${{github.event.inputs.verbosity}}",           "minimal"),
-            @("publish",            "${{github.event.inputs.publish}}",             "true"),
-            @("publishSymbols",     "${{github.event.inputs.publishSymbols}}",      "true"),
-            @("removePrereleases",  "${{github.event.inputs.removePrereleases}}",   "true")
+            @("publish",            "${{github.event.inputs.publish}}",             "false"),
+            @("publishSymbols",     "${{github.event.inputs.publishSymbols}}",      "false"),
+            @("removePrereleases",  "${{github.event.inputs.removePrereleases}}",   "false")
         )
             
         $manual = $('${{github.event_name}}' -eq 'workflow_dispatch')
