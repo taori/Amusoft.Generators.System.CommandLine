@@ -1,11 +1,10 @@
 ﻿using System.Linq;
 using Amusoft.Generators.System.CommandLine.Attributes;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NotImplementedException = System.NotImplementedException;
 
-namespace Amusoft.Toolkit.Generators.System.CommandLine;
+namespace Amusoft.Generators.System.CommandLine;
 
 [Generator]
 internal class CommandHandlerGenerator : ISourceGenerator
@@ -16,15 +15,17 @@ internal class CommandHandlerGenerator : ISourceGenerator
 
 	public void Execute(GeneratorExecutionContext context)
 	{
-
 		foreach (var syntaxTree in context.Compilation.SyntaxTrees)
 		{
 			var root = syntaxTree.GetRoot(context.CancellationToken);
 			foreach (var classDeclarationSyntax in root.DescendantNodes(_ => true).OfType<ClassDeclarationSyntax>())
 			{
-				var attributes = classDeclarationSyntax.AttributeLists.SelectMany(d => d.Attributes);
 				var semanticModel = context.Compilation.GetSemanticModel(syntaxTree);
-				attributes.Select(d => semanticModel.GetDeclaredSymbol(d).MetadataName == typeof(GenerateCommandHandlerAttribute).FullName);
+				var isCandidate = IsClassCandidate(classDeclarationSyntax, semanticModel);
+				if (isCandidate)
+				{
+					AppendGeneratorCode(context, classDeclarationSyntax);
+				}
 			}
 		}
 
@@ -49,22 +50,39 @@ internal class CommandHandlerGenerator : ISourceGenerator
 		// 		context.AddSource($"{typeName}.g.cs", source);
 	}
 
-	public static bool ContainsCandidate(SyntaxTree tree)
+	private void AppendGeneratorCode(GeneratorExecutionContext context, ClassDeclarationSyntax classDeclarationSyntax)
 	{
-		if (!tree.TryGetRoot(out var root))
-			return false;
+		var source = @$"""
+namespace Amusoft.Generators.System.CommandLine.UnitTests.TestResources;
 
-		foreach (var classDeclarationSyntax in root.DescendantNodes().OfType<ClassDeclarationSyntax>())
+{classDeclarationSyntax.Modifiers} {classDeclarationSyntax.Identifier}  
+{{
+	public void Hello(){{}}
+}}
+		""";
+
+		context.AddSource($"{classDeclarationSyntax.Identifier.Text}.g.cs", source);
+	}
+
+	private static bool IsClassCandidate(ClassDeclarationSyntax classDeclarationSyntax, SemanticModel semanticModel)
+	{
+		var classSymbol = semanticModel.GetDeclaredSymbol(classDeclarationSyntax);
+		var attributesData = classSymbol.GetAttributes();
+		var handlerAttributeTypeSymbol = semanticModel.Compilation.GetTypeByMetadataName(typeof(GenerateCommandHandlerAttribute).FullName);
+		var match = attributesData.Any(d => d.AttributeClass.Equals(handlerAttributeTypeSymbol));
+		if (attributesData.Length > 0 && attributesData[0].AttributeClass.Kind == SymbolKind.ErrorType)
 		{
-			if (IsClassCandidate(classDeclarationSyntax))
+			var a = "error";
+		}
+		return match;
+		var attributes = classDeclarationSyntax.AttributeLists.SelectMany(d => d.Attributes);
+		foreach (var attributeSyntax in attributes)
+		{
+			var symbol = semanticModel.GetSymbolInfo(attributeSyntax);
+			if (symbol.CandidateSymbols.Length > 0 && symbol.CandidateSymbols.Any(d=> d.MetadataName == typeof(GenerateCommandHandlerAttribute).FullName))
 				return true;
 		}
 
 		return false;
-	}
-
-	private static bool IsClassCandidate(ClassDeclarationSyntax classDeclarationSyntax)
-	{
-		return classDeclarationSyntax.AttributeLists.Count > 0;
 	}
 }

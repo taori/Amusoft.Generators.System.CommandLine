@@ -1,27 +1,33 @@
+using System.Linq;
+using System.Threading.Tasks;
 using Amusoft.XUnit.NLog.Extensions;
 using Amusoft.Generators.System.CommandLine.UnitTests.Toolkit;
-using Amusoft.Toolkit.Generators.System.CommandLine;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Shouldly;
+using VerifyXunit;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Amusoft.Generators.System.CommandLine.UnitTests;
 
-public class CommandHandlerGeneratorTests : TestBase
+[UsesVerify]
+public class CommandHandlerGeneratorTests : GeneratorTestBase
 {
 	public CommandHandlerGeneratorTests(ITestOutputHelper outputHelper, GlobalSetupFixture data) : base(outputHelper, data)
 	{
 	}
 
 	[Theory]
-	[InlineData("TestResources|ClassWithAttribute.cs", true)]
-	[InlineData("TestResources|ClassWithoutAttribute.cs", false)]
-	public void CheckHandlerPresent(string testFile, bool expected)
+	[InlineData("TestResources|ClassWithAttribute.cs")]
+	[InlineData("TestResources|ClassWithoutAttribute.cs")]
+	public async Task CompareGeneration(string testFile)
 	{
 		var testContent = GetProjectFileContent(testFile);
-		var found = CommandHandlerGenerator.ContainsCandidate(CSharpSyntaxTree.ParseText(testContent));
-		found.ShouldBe(expected);
+		
+		var results = GetSourceGeneratorResults<CommandHandlerGenerator>(testContent);
+
+		await Verifier.Verify(results.runResult)
+			.UseParameters(testFile);
 	}
 }

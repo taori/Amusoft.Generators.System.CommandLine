@@ -21,7 +21,7 @@
 		</PackageReleaseNotes>
 		<PackageTags>TODO</PackageTags>
 
-		<LangVersion>10.0</LangVersion>
+		<LangVersion>preview</LangVersion>
 		<WarningsAsErrors>CS1591</WarningsAsErrors>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 		<Nullable>Enable</Nullable>
@@ -31,7 +31,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Include="..\..\README.md" Pack="True" PackagePath="\"/>
+		<None Include="..\..\README.md" Pack="True" PackagePath="\" />
 		<None Include="packageIcon.png" Pack="True" PackagePath="\" />
 
 		<InternalsVisibleTo Include="Amusoft.Generators.System.CommandLine.UnitTests" />
@@ -44,11 +44,11 @@
 
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.2">
+		<PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3">
 			<PrivateAssets>all</PrivateAssets>
 			<!-- <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets> -->
 		</PackageReference>
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.11.0" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.3.1" PrivateAssets="all" />
 	</ItemGroup>
 
 	<!-- <ItemGroup> -->
