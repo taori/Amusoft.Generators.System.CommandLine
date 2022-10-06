@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Text;
@@ -63,6 +64,9 @@ internal class CommandHandlerGenerator : ISourceGenerator
 		if (innerClass == null) throw new ArgumentNullException(nameof(innerClass));
 
 		var outerClassSymbol = semanticModel.GetDeclaredSymbol(outerClass);
+		if (outerClassSymbol is null)
+			return;
+
 		var targetNamespace = outerClassSymbol.ContainingNamespace.ToDisplayString();
 		var constructorServiceList = GetConstructorServices(semanticModel, innerClass)
 			.Select(d => $"host.Services.GetRequiredService<{d}>()");
@@ -142,9 +146,9 @@ internal class CommandHandlerGenerator : ISourceGenerator
 		return Array.Empty<string>();
 	}
 
-	private static bool TryGetCandidate(SemanticModel semanticModel, ClassDeclarationSyntax parentClass, out ClassDeclarationSyntax implementorChildClass)
+	private static bool TryGetCandidate(SemanticModel semanticModel, ClassDeclarationSyntax parentClass, [NotNullWhen(true)] out ClassDeclarationSyntax? implementorChildClass)
 	{
-		implementorChildClass = null;
+		implementorChildClass = default;
 		if (parentClass.BaseList is null)
 			return false;
 
@@ -167,7 +171,15 @@ internal class CommandHandlerGenerator : ISourceGenerator
 			.Where(syntax =>
 			{
 				var classSymbol = semanticModel.GetDeclaredSymbol(syntax);
-				return classSymbol.GetAttributes().Any(attributeData => attributeData.AttributeClass.Equals(handlerAttributeTypeSymbol, SymbolEqualityComparer.Default));
+				if (classSymbol is null)
+					return false;
+
+				return classSymbol.GetAttributes().Any(attributeData =>
+				{
+					if (attributeData is {AttributeClass: { } attributeClass})
+						return attributeClass.Equals(handlerAttributeTypeSymbol, SymbolEqualityComparer.Default);
+					return true;
+				});
 			})
 			.FirstOrDefault();
 
