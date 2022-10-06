@@ -23,7 +23,7 @@ namespace Amusoft.Generators.System.CommandLine.UnitTests.Toolkit
 			var dirSections = dir.Split(Path.DirectorySeparatorChar);
 			var linked = dirSections.Concat(Enumerable.Repeat("..", pathSkip)).Concat(fileSections).ToArray();
 			var filePath = Path.Combine(linked);
-			filePath = new Uri(filePath).AbsolutePath;
+			filePath = new Uri(filePath, UriKind.RelativeOrAbsolute).AbsolutePath;
 
 			if (!File.Exists(filePath))
 				throw new FileNotFoundException("File not found", filePath);
