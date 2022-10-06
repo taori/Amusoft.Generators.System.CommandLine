@@ -21,6 +21,9 @@ public class CommandHandlerGeneratorTests : GeneratorTestBase
 	[Theory]
 	[InlineData("TestResources|ClassWithAttribute.cs")]
 	[InlineData("TestResources|ClassWithoutAttribute.cs")]
+	[InlineData("TestResources|ClassTwoArguments.cs")]
+	[InlineData("TestResources|ClassWrappedOption.cs")]
+	[InlineData("TestResources|ClassWrappedArgument.cs")]
 	public async Task CompareGeneration(string testFile)
 	{
 		var testContent = GetProjectFileContent(testFile);
