@@ -57,6 +57,7 @@ public class GeneratorTestBase : TestBase
 		{
 			// yield return MetadataReference.CreateFromFile(path);
 		}
+
 		yield return MetadataReference.CreateFromFile(Assembly.Load("System.Runtime, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a").Location);
 		yield return MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location);
 		yield return MetadataReference.CreateFromFile(Assembly.Load("netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51").Location);

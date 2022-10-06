@@ -9,19 +9,19 @@ using Microsoft.Extensions.Hosting;
 
 namespace Amusoft.Generators.System.CommandLine.UnitTests.TestResources;	
 
-public partial ClassWithAttribute
+public partial class ClassWithAttribute
 {
 	private ClassWithHandler _handler;
 
 	private void BindHandler()
 	{
-		if (_handler is null)
+		if (_handler is not null)
 			return;
 
 		this.SetHandler(async (context) =>
 		{
 			var host = context.BindingContext.GetRequiredService<IHost>();
-			_handler = new ClassWithHandler(host.Services.GetRequiredService<System.string>());
+			_handler = new ClassWithHandler(host.Services.GetRequiredService<string>());
 			var p1 = context.ParseResult.GetValueForOption(OptionOne);
 			var p2 = context.ParseResult.GetValueForOption(OptionTwo);
 			var p3 = context.ParseResult.GetValueForArgument(ArgumentOne);
@@ -29,7 +29,7 @@ public partial ClassWithAttribute
 		});
 	}
 
-	public partial ClassWithHandler : InvokerBase
+	public partial class ClassWithHandler : InvokerBase
 	{
 	}
 

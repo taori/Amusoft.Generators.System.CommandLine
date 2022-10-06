@@ -9,13 +9,13 @@ using Microsoft.Extensions.Hosting;
 
 namespace Amusoft.Generators.System.CommandLine.UnitTests.TestResources;	
 
-public partial ClassWrappedOption
+public partial class ClassWrappedOption
 {
 	private ClassWithHandler _handler;
 
 	private void BindHandler()
 	{
-		if (_handler is null)
+		if (_handler is not null)
 			return;
 
 		this.SetHandler(async (context) =>
@@ -28,7 +28,7 @@ public partial ClassWrappedOption
 		});
 	}
 
-	public partial ClassWithHandler : InvokerBase
+	public partial class ClassWithHandler : InvokerBase
 	{
 	}
 

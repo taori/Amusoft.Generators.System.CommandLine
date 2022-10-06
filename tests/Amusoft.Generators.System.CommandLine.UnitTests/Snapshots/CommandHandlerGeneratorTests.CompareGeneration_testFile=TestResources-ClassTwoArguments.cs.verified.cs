@@ -9,26 +9,26 @@ using Microsoft.Extensions.Hosting;
 
 namespace Amusoft.Generators.System.CommandLine.UnitTests.TestResources;	
 
-public partial ClassTwoArguments
+public partial class ClassTwoArguments
 {
 	private ClassWithHandler _handler;
 
 	private void BindHandler()
 	{
-		if (_handler is null)
+		if (_handler is not null)
 			return;
 
 		this.SetHandler(async (context) =>
 		{
 			var host = context.BindingContext.GetRequiredService<IHost>();
-			_handler = new ClassWithHandler(host.Services.GetRequiredService<System.string>(),host.Services.GetRequiredService<System.int>());
+			_handler = new ClassWithHandler(host.Services.GetRequiredService<string>(),host.Services.GetRequiredService<int>());
 			var p1 = context.ParseResult.GetValueForArgument(ArgumentOne);
 			var p2 = context.ParseResult.GetValueForArgument(ArgumentTwo);
 			await _handler.ExecuteAsync(context, p1, p2);
 		});
 	}
 
-	public partial ClassWithHandler : InvokerBase
+	public partial class ClassWithHandler : InvokerBase
 	{
 	}
 

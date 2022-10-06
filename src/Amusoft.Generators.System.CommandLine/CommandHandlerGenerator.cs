@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.CommandLine;
-using System.CommandLine.Invocation;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
@@ -82,13 +81,13 @@ internal class CommandHandlerGenerator : ISourceGenerator
 
 		namespace {{targetNamespace}};	
 		
-		{{outerClass.Modifiers}} {{outerClass.Identifier}}
+		{{outerClass.Modifiers}} class {{outerClass.Identifier}}
 		{
 			private {{innerClass.Identifier.Text}} _handler;
 
 			private void BindHandler()
 			{
-				if (_handler is null)
+				if (_handler is not null)
 					return;
 
 				this.SetHandler(async (context) =>
@@ -131,7 +130,7 @@ internal class CommandHandlerGenerator : ISourceGenerator
 				});
 			}
 
-			{{innerClass.Modifiers}} {{innerClass.Identifier.Text}} : InvokerBase
+			{{innerClass.Modifiers}} class {{innerClass.Identifier.Text}} : InvokerBase
 			{
 			}
 		
@@ -165,8 +164,8 @@ internal class CommandHandlerGenerator : ISourceGenerator
 	private IEnumerable<ParameterDeclaration> GetCommandParameterDeclarations(SemanticModel semanticModel, ClassDeclarationSyntax outerClass)
 	{
 		var index = 1;
-		var optionType = semanticModel.Compilation.GetTypeByMetadataName(typeof(global::System.CommandLine.Option<>).FullName);
-		var argumentType = semanticModel.Compilation.GetTypeByMetadataName(typeof(global::System.CommandLine.Argument<>).FullName);
+		var optionType = semanticModel.Compilation.GetTypeByMetadataName("System.CommandLine.Option`1");
+		var argumentType = semanticModel.Compilation.GetTypeByMetadataName("System.CommandLine.Argument`1");
 
 		foreach (var memberDeclarationSyntax in outerClass.Members)
 		{
@@ -220,7 +219,7 @@ internal class CommandHandlerGenerator : ISourceGenerator
 			var parameterTypes = parameters.Select(parameter =>
 			{
 				if (parameter.Type != null && semanticModel.GetSymbolInfo(parameter.Type) is {Symbol: { } symbol})
-					return $"{symbol.ContainingNamespace.ToDisplayString()}.{symbol.ToDisplayString()}";
+					return $"{symbol.ToDisplayString()}";
 
 				return string.Empty;
 			});
@@ -239,7 +238,7 @@ internal class CommandHandlerGenerator : ISourceGenerator
 
 		var parentSymbol = semanticModel.GetDeclaredSymbol(parentClass);
 		var handlerAttributeTypeSymbol = semanticModel.Compilation.GetTypeByMetadataName(typeof(GenerateCommandHandlerAttribute).FullName);
-		var commandSymbol = semanticModel.Compilation.GetTypeByMetadataName(typeof(global::System.CommandLine.Command).FullName);
+		var commandSymbol = semanticModel.Compilation.GetTypeByMetadataName("System.CommandLine.Command");
 
 		var inheritsCommand = parentClass.BaseList.Types.Any(baseType =>
 		{
