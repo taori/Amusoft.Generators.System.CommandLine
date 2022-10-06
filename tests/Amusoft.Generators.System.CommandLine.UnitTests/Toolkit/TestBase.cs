@@ -20,13 +20,11 @@ namespace Amusoft.Generators.System.CommandLine.UnitTests.Toolkit
 		{
 			var dir = Path.GetDirectoryName(typeof(TestBase).Assembly.Location);
 			var fileSections = pipedPath.Split('|', StringSplitOptions.RemoveEmptyEntries);
-			var dirSections = dir.Split(Path.DirectorySeparatorChar);
-			var linked = dirSections.Concat(Enumerable.Repeat("..", pathSkip)).Concat(fileSections).ToArray();
-			var filePath = Path.Combine(linked);
-			// filePath = new Uri(filePath, UriKind.Absolute).AbsolutePath;
+			var filePath = Path.Combine(dir, Path.Combine(Enumerable.Repeat("..", pathSkip).ToArray()), Path.Combine(fileSections.ToArray()));
+			filePath = new Uri(filePath, UriKind.Absolute).AbsolutePath;
 
 			if (!File.Exists(filePath))
-				throw new FileNotFoundException($"File not found ({filePath}, dir: {dir})", filePath);
+				throw new FileNotFoundException($"File not found ({filePath})", filePath);
 
 			return File.ReadAllText(filePath);
 		}
