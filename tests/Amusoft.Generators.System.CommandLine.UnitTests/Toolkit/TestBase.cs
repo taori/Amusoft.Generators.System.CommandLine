@@ -26,7 +26,7 @@ namespace Amusoft.Generators.System.CommandLine.UnitTests.Toolkit
 			// filePath = new Uri(filePath, UriKind.Absolute).AbsolutePath;
 
 			if (!File.Exists(filePath))
-				throw new FileNotFoundException($"File not found ({filePath})", filePath);
+				throw new FileNotFoundException($"File not found ({filePath}, dir: {dir})", filePath);
 
 			return File.ReadAllText(filePath);
 		}
