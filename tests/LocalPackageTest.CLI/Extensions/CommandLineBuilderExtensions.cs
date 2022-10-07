@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.CommandLine.Builder;
+using LocalPackageTest.CLI.Commands;
 
 namespace LocalPackageTest.CLI.Extensions;
 
